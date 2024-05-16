@@ -21,18 +21,18 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
 
 
 /*
-	���Ԫ�صع���ģ�ͱ任��
-	�󲢷��ظþ����ڴ˺����У���ֻ��Ҫʵ����ά����z����ת�ı任����
-	�����ô���ƽ��������
+	逐个元素地构建模型变换矩
+	阵并返回该矩阵。在此函数中，你只需要实现三维中绕z轴旋转的变换矩阵，
+	而不用处理平移与缩放
 */
 Eigen::Matrix4f get_model_matrix(float rotation_angle)
 {
-	//������ rotation_angle ����ת�Ƕ�
-	//ֻ��Ҫ������z����ת����ת�Ƕȵľ��󼴿�
-	//��Ҫע���һ����rotation_angle��Ҫת��Ϊ����
+	//很明显 rotation_angle 是旋转角度
+	//只需要返回绕z轴旋转该旋转角度的矩阵即可
+	//需要注意的一点是rotation_angle需要转化为弧度
 	rotation_angle = rotation_angle * MY_PI / 180;
-	//������һ�д�������壺�ڶ���þ������ʱ������һ��ͬ�ߴ�ͬ�������͵ĵ�λ��
-	// �����ʼ������������4*4��
+	//下面这一行代码的意义：在定义该矩阵变量时，创建一个同尺寸同数据类型的单位阵，
+	// 对其初始化，这里它是4*4的
 	Eigen::Matrix4f model = Eigen::Matrix4f::Identity();
 
 	model << cos(rotation_angle), -1 * sin(rotation_angle), 0, 0,
@@ -43,26 +43,26 @@ Eigen::Matrix4f get_model_matrix(float rotation_angle)
 }
 
 /*
-	ʹ�ø����Ĳ������Ԫ�صع���͸��ͶӰ���󲢷���
-	�þ���
-	//eyefov��ʾ��Ұ�Ƕȣ�aspect_ratio��ʾxy�ı��� (��width:height)
-	zNear,zFar �ǿ��ｲ�� n �� f�� ���Ǹ�ֵ
+	使用给定的参数逐个元素地构建透视投影矩阵并返回
+	该矩阵
+	//eyefov表示视野角度，aspect_ratio表示xy的比例 (即width:height)
+	zNear,zFar 是课里讲的 n 和 f， 都是负值
 */
 Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
 	float zNear, float zFar)
 {
-	//���ڴ�������zNear��zFar��������������ת���ɸ��������������λ���������������
+	//由于传进来的zNear和zFar是正数，所以先转化成负数，这样三角形画出来就是正的了
 	double l, r, b, t, n, f;
 	n = -zNear, f = -zFar;
-	//���ȽǶ�ת����,tan(��/2) = t/(-n)
+	//首先角度转弧度,tan(θ/2) = t/(-n)
 	t = zNear * tan(MY_PI * (eye_fov / 180.0) / 2);
 	r = aspect_ratio * t;
 	l = -r;
 	b = -t;
-	//���ȹ���������������ֱ��д͸��ͶӰ����Ҳ���ԣ�����Ҳֱ�Ӹ�������
-	//����ͨ��һ��squeeze��һ������ͶӰ�����ξ���任���������������
+	//首先构造两个单位矩阵，直接写透视投影矩阵也可以，虎书也直接给出答案了
+	//但是通过一次squeeze和一次正交投影，两次矩阵变换乘起来会更好理解
 	Eigen::Matrix4f p_t_ortho_proj = Eigen::Matrix4f::Identity();
-	//������ͶӰ��һ��λ�ƾ������һ����������
+	//该正交投影是一个位移矩阵左乘一个放缩矩阵
 	Eigen::Matrix4f orthographic_proj = Eigen::Matrix4f::Identity();
 	p_t_ortho_proj << n, 0, 0, 0,
 		0, n, 0, 0,
